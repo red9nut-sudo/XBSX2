@@ -13,6 +13,11 @@
 
 struct Pcsx2Config;
 
+namespace Achievements
+{
+	enum class LoginRequestReason;
+}
+
 namespace FullscreenUI
 {
 	bool Initialize();
@@ -26,6 +31,13 @@ namespace FullscreenUI
 	void OpenPauseMenu();
 	bool OpenAchievementsWindow();
 	bool OpenLeaderboardsWindow();
+
+	// Create a new memory card.
+	void DrawCreateMemoryCardWindow();
+	
+	// Set the login reason for the achievements login window
+	void SetAchievementsLoginReason(Achievements::LoginRequestReason reason);
+	void DrawAchievementsLoginWindow();
 
 	// NOTE: Only call from GS thread.
 	bool IsAchievementsWindowOpen();
@@ -58,3 +70,6 @@ namespace Host
 	/// Did Playstation in the currently selected locale use circle as confirm
 	bool LocaleCircleConfirm();
 } // namespace Host
+
+// Change this to change the version in the about screen.
+#define APP_VERSION "2.0.8.4"
