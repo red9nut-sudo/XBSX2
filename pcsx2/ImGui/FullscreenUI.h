@@ -20,6 +20,8 @@ namespace Achievements
 
 namespace FullscreenUI
 {
+	class HddCreateInProgress;
+
 	bool Initialize();
 	bool IsInitialized();
 	void ReloadSvgResources();
@@ -52,6 +54,8 @@ namespace FullscreenUI
 	void Render();
 	void InvalidateCoverCache();
 	TinyString TimeToPrintableString(time_t t);
+	
+	bool CreateHardDriveWithProgress(const std::string& filePath, int sizeInGB, bool use48BitLBA = true);
 } // namespace FullscreenUI
 
 // Host UI triggers from Big Picture mode.
