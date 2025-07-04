@@ -259,7 +259,11 @@ __ri void ImGuiManager::DrawPerformanceOverlay(float& position_y, float scale, f
 
 		if (GSConfig.OsdShowVersion)
 		{
+#ifdef UWP_APP_VERSION
+			text.append_format("{}XBSX2 {}", first ? "" : " | ", UWP_APP_VERSION);
+#else
 			text.append_format("{}XBSX2 {}", first ? "" : " | ", BuildVersion::GitRev);
+#endif
 		}
 
 		if (!text.empty())
