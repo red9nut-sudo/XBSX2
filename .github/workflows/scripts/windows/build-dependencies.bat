@@ -66,7 +66,7 @@ call :downloadfile "harfbuzz-%HARFBUZZ%.zip" https://github.com/harfbuzz/harfbuz
 call :downloadfile "lpng%LIBPNG%.zip" https://download.sourceforge.net/libpng/lpng1650.zip 4be6938313b08d5921f9dede13f2789b653c96f4f8595d92ff3f09c9320e51c7 || goto error
 call :downloadfile "libjpeg-turbo-%LIBJPEGTURBO%.tar.gz" "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/%LIBJPEGTURBO%/libjpeg-turbo-%LIBJPEGTURBO%.tar.gz" aadc97ea91f6ef078b0ae3a62bba69e008d9a7db19b34e4ac973b19b71b4217c || goto error
 call :downloadfile "libwebp-%WEBP%.tar.gz" "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-%WEBP%.tar.gz" 7d6fab70cf844bf6769077bd5d7a74893f8ffd4dfb42861745750c63c2a5c92c || goto error
-call :downloadfile "%SDL%.zip" "https://libsdl.org/release/%SDL%.zip" 0cc7430fb827c1f843e31b8b26ba7f083b1eeb8f6315a65d3744fd4d25b6c373 || goto error
+call :downloadfile "SDL-UWP.zip" "https://github.com/SternXD/SDL3-uwp/releases/download/uwp-3.2.16/SDL-UWP.zip" f072153f5f13cc749cffd808ba925fc9b0700cf915defb4f0bf5e847e3844745 || goto error
 call :downloadfile "qtbase-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtbase-everywhere-src-%QT%.zip" efa6d8ef9f7ae0fd9f7d280fbff574d71882b60a357ae639e516dc173cf26986 || goto error
 call :downloadfile "qtimageformats-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtimageformats-everywhere-src-%QT%.zip" 8439d3394bc380fd17a920ee96df1d2272bf8d3490871d948ef750f95e0ded06 || goto error
 call :downloadfile "qtsvg-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtsvg-everywhere-src-%QT%.zip" a8f90c768b54e28d61e02c1229b74a2b834e9852af523e5c70bcd2ae4c34a772 || goto error
@@ -174,15 +174,12 @@ cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
 
-echo Building SDL...
-rmdir /S /Q "%SDL%"
-%SEVENZIP% x "%SDL%.zip" || goto error
-cd "%SDL%" || goto error
-cmake -B build -DCMAKE_BUILD_TYPE=Release %FORCEPDB% -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DBUILD_SHARED_LIBS=ON -DSDL_SHARED=ON -DSDL_STATIC=OFF -G Ninja || goto error
-cmake --build build --parallel || goto error
-ninja -C build install || goto error
-copy build\SDL3.pdb "%INSTALLDIR%\bin" || goto error
-cd .. || goto error
+echo Installing pre-built SDL...
+%SEVENZIP% x "SDL-UWP.zip" || goto error
+xcopy /E /I /Y "SDL-UWP\bin\*" "%INSTALLDIR%\bin\" || goto error
+xcopy /E /I /Y "SDL-UWP\lib\*" "%INSTALLDIR%\lib\" || goto error
+xcopy /E /I /Y "SDL-UWP\include\*" "%INSTALLDIR%\include\" || goto error
+rmdir /S /Q "SDL-UWP" || goto error
 
 if %DEBUG%==1 (
   set QTBUILDSPEC=-DCMAKE_CONFIGURATION_TYPES="Release;Debug" -G "Ninja Multi-Config"
@@ -335,3 +332,11 @@ if /i %~3==%filechecksum% (
     echo Expected %~3 got %filechecksum%.
     exit /B 1
 )
+
+:downloadfile-nohash
+if not exist "%~1" (
+  echo Downloading %~1 from %~2...
+  curl -L -o "%~1" "%~2" || goto error
+)
+echo Skipping validation for %~1 (development build).
+exit /B 0
