@@ -14,7 +14,7 @@ Please note that a BIOS dump from a legitimately-owned PS2 console is required t
 
 ## Building
 
-You can find the compilation instructions here: [BUILDING.md](https://github.com/EmulationCollective/XBSX2/blob/master/pcsx2-winrt/BUILDING.md)
+You can find the compilation instructions here: [BUILD.md](https://github.com/XboxEmulationHub/XBSX2/blob/master/pcsx2-winrt/BUILD.md)
 
 ## Credits
 
