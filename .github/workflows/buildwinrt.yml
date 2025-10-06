@@ -17,14 +17,11 @@ jobs:
           - Release AVX2
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up MSBuild
-        uses: microsoft/setup-msbuild@v2
+      - uses: microsoft/setup-msbuild@v2
 
-      - name: Set up NuGet
-        uses: NuGet/setup-nuget@v2
+      - uses: NuGet/setup-nuget@v2
 
       - name: Restore NuGet packages
         run: nuget restore PCSX2_qt.sln
@@ -43,23 +40,14 @@ jobs:
       - name: Extract Dependencies
         run: 7z x xbsx2-dependencies-dev.7z -o"."
 
-      - name: Extract version string from AppxManifest
+      - name: Extract version string
         id: extract_version
         run: |
-          $manifest = [xml](Get-Content pcsx2-winrt\Package.appxmanifest)
-          $version = $manifest.Package.Identity.Version
-          echo "version=$version" >> $env:GITHUB_OUTPUT
+          $m = [xml](Get-Content pcsx2-winrt\Package.appxmanifest)
+          echo "version=$($m.Package.Identity.Version)" >> $env:GITHUB_OUTPUT
 
       - name: Build the project
-        run: |
-          msbuild PCSX2_qt.sln /t:Rebuild ^
-            /p:Configuration="${{ matrix.configuration }}" ^
-            /p:Platform=x64 ^
-            /p:PlatformToolset=v143 ^
-            /p:UapAppxPackageBuildMode=StoreUpload ^
-            /p:WindowsAppSDKSelfContained=true ^
-            /p:LinkAdditionalDependencies=xaudio2.lib;mfreadwrite.lib;mfplat.lib;shlwapi.lib ^
-            /m /nr:false /verbosity:minimal
+        run: msbuild PCSX2_qt.sln /t:Rebuild /p:Configuration="${{ matrix.configuration }}" /p:Platform=x64 /p:PlatformToolset=v143 /p:UapAppxPackageBuildMode=StoreUpload /p:WindowsAppSDKSelfContained=true /p:LinkAdditionalDependencies=xaudio2.lib;mfreadwrite.lib;mfplat.lib;shlwapi.lib /m /nr:false /verbosity:minimal
 
       - name: Upload APPX file (SSE4)
         if: matrix.configuration == 'Release'
