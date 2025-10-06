@@ -50,7 +50,7 @@ jobs:
           $m = [xml](Get-Content pcsx2-winrt\Package.appxmanifest)
           echo "version=$($m.Package.Identity.Version)" >> $env:GITHUB_OUTPUT
 
-      - name: Build Project (No Manual Link Args)
+      - name: Build Project (Fixed)
         shell: cmd
         run: |
           msbuild PCSX2_qt.sln /t:Rebuild /p:Configuration="%CONFIGURATION%" /p:Platform=x64 /p:PlatformToolset=v143 /p:UapAppxPackageBuildMode=StoreUpload /p:WindowsAppSDKSelfContained=true /m /nr:false /verbosity:minimal
