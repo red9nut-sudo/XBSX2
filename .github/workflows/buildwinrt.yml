@@ -1,52 +1,71 @@
 name: WinRT SSE4, AVX2 Builds
 on:
-  push:       { branches: [ master ] }
-  pull_request: { branches: [ master ] }
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build:
     runs-on: windows-latest
     strategy:
-      matrix: { configuration: ['Release','Release AVX2'] }
+      matrix:
+        configuration:
+          - Release
+          - Release AVX2
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - uses: microsoft/setup-msbuild@v2
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v2
 
-    - uses: NuGet/setup-nuget@v2
+      - name: Set up NuGet
+        uses: NuGet/setup-nuget@v2
 
-    - run: nuget restore PCSX2_qt.sln
+      - name: Restore NuGet packages
+        run: nuget restore PCSX2_qt.sln
 
-    - shell: cmd
-      run: |
-        cd bin/resources
-        aria2c -Z "https://github.com/PCSX2/pcsx2_patches/releases/tag/latest/download/patches.zip"
+      - name: Download Patches
+        shell: cmd
+        run: |
+          cd bin/resources
+          aria2c -Z "https://github.com/PCSX2/pcsx2_patches/releases/tag/latest/download/patches.zip"
 
-    - shell: cmd
-      run: |
-        aria2c -Z "https://github.com/XboxEmulationHub/xbsx2-dependencies/releases/download/latest-windows-dependencies-dev/xbsx2-dependencies-dev.7z"
-    - run: 7z x xbsx2-dependencies-dev.7z -o"."
+      - name: Download Dependencies
+        shell: cmd
+        run: |
+          aria2c -Z "https://github.com/XboxEmulationHub/xbsx2-dependencies/releases/download/latest-windows-dependencies-dev/xbsx2-dependencies-dev.7z"
 
-    - id: extract_version
-      run: |
-        $m=[xml](Get-Content pcsx2-winrt\Package.appxmanifest)
-        echo "version=$($m.Package.Identity.Version)" >> $env:GITHUB_OUTPUT
+      - name: Extract Dependencies
+        run: 7z x xbsx2-dependencies-dev.7z -o"."
 
-    - run: |
-        msbuild PCSX2_qt.sln /t:Rebuild /p:Configuration="${{matrix.configuration}}" /p:Platform=x64 /p:PlatformToolset=v143 /p:UapAppxPackageBuildMode=StoreUpload /p:WindowsAppSDKSelfContained=true /p:LinkAdditionalDependencies="xaudio2.lib;mfreadwrite.lib;mfplat.lib;shlwapi.lib" /m /nr:false /verbosity:minimal
+      - name: Extract version string from AppxManifest
+        id: extract_version
+        run: |
+          $manifest = [xml](Get-Content pcsx2-winrt\Package.appxmanifest)
+          $version = $manifest.Package.Identity.Version
+          echo "version=$version" >> $env:GITHUB_OUTPUT
 
-    - uses: actions/upload-artifact@v4
-      if: matrix.configuration=='Release'
-      with:
-        name: appx-SSE4
-        path: "AppPackages/**/*.msixbundle"
-        if-no-files-found: error
+      - name: Build the project
+        run: |
+          msbuild PCSX2_qt.sln /t:Rebuild /p:Configuration="${{ matrix.configuration }}" /p:Platform=x64 /p:PlatformToolset=v143 /p:UapAppxPackageBuildMode=StoreUpload /p:WindowsAppSDKSelfContained=true /p:LinkAdditionalDependencies="xaudio2.lib;mfreadwrite.lib;mfplat.lib;shlwapi.lib" /m /nr:false /verbosity:minimal
 
-    - uses: actions/upload-artifact@v4
-      if: matrix.configuration=='Release AVX2'
-      with:
-        name: appx-AVX2
-        path: "AppPackages/**/*.msixbundle"
-        if-no-files-found: error
-ease\ AVX2/AppPackages/xbsx2/xbsx2_${{ steps.extract_version.outputs.version }}_x64_Release\ AVX2_Test/xbsx2_${{ steps.extract_version.outputs.version }}_x64_Release\ AVX2.appx
+      - name: Upload APPX file (SSE4)
+        if: matrix.configuration == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: appx-SSE4
+          path: AppPackages/**/*.msixbundle
+          if-no-files-found: error
+
+      - name: Upload APPX file (AVX2)
+        if: matrix.configuration == 'Release AVX2'
+        uses: actions/upload-artifact@v4
+        with:
+          name: appx-AVX2
+          path: AppPackages/**/*.msixbundle
+          if-no-files-found: error
