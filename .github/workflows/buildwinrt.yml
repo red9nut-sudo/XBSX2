@@ -52,7 +52,14 @@ jobs:
 
       - name: Build the project
         run: |
-          msbuild PCSX2_qt.sln /t:Rebuild /p:Configuration="${{ matrix.configuration }}" /p:Platform=x64 /p:PlatformToolset=v143 /p:UapAppxPackageBuildMode=StoreUpload /p:WindowsAppSDKSelfContained=true /p:LinkAdditionalDependencies="xaudio2.lib;mfreadwrite.lib;mfplat.lib;shlwapi.lib" /m /nr:false /verbosity:minimal
+          msbuild PCSX2_qt.sln /t:Rebuild ^
+            /p:Configuration="${{ matrix.configuration }}" ^
+            /p:Platform=x64 ^
+            /p:PlatformToolset=v143 ^
+            /p:UapAppxPackageBuildMode=StoreUpload ^
+            /p:WindowsAppSDKSelfContained=true ^
+            /p:LinkAdditionalDependencies=xaudio2.lib;mfreadwrite.lib;mfplat.lib;shlwapi.lib ^
+            /m /nr:false /verbosity:minimal
 
       - name: Upload APPX file (SSE4)
         if: matrix.configuration == 'Release'
