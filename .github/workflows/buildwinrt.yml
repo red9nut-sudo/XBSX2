@@ -1,11 +1,11 @@
-name: WinRT SSE4, AVX2 Builds
+name: XBSX2 Xbox One Build
 on:
   push:
     branches:
-      - master
+      - dev
   pull_request:
     branches:
-      - master
+      - dev
 
 jobs:
   build:
@@ -17,13 +17,16 @@ jobs:
           - Release AVX2
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - uses: microsoft/setup-msbuild@v2
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
-      - uses: NuGet/setup-nuget@v2
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
 
-      - name: Restore NuGet packages
+      - name: Restore NuGet Packages
         run: nuget restore PCSX2_qt.sln
 
       - name: Download Patches
@@ -31,6 +34,7 @@ jobs:
         run: |
           cd bin/resources
           aria2c -Z "https://github.com/PCSX2/pcsx2_patches/releases/tag/latest/download/patches.zip"
+          cd ../..
 
       - name: Download Dependencies
         shell: cmd
@@ -40,16 +44,20 @@ jobs:
       - name: Extract Dependencies
         run: 7z x xbsx2-dependencies-dev.7z -o"."
 
-      - name: Extract version string
+      - name: Extract Version from Manifest
         id: extract_version
         run: |
           $m = [xml](Get-Content pcsx2-winrt\Package.appxmanifest)
           echo "version=$($m.Package.Identity.Version)" >> $env:GITHUB_OUTPUT
 
-      - name: Build the project
-        run: msbuild PCSX2_qt.sln /t:Rebuild /p:Configuration="${{ matrix.configuration }}" /p:Platform=x64 /p:PlatformToolset=v143 /p:UapAppxPackageBuildMode=StoreUpload /p:WindowsAppSDKSelfContained=true /p:LinkAdditionalDependencies=xaudio2.lib;mfreadwrite.lib;mfplat.lib;shlwapi.lib /m /nr:false /verbosity:minimal
+      - name: Build Project (No Manual Link Args)
+        shell: cmd
+        run: |
+          msbuild PCSX2_qt.sln /t:Rebuild /p:Configuration="%CONFIGURATION%" /p:Platform=x64 /p:PlatformToolset=v143 /p:UapAppxPackageBuildMode=StoreUpload /p:WindowsAppSDKSelfContained=true /m /nr:false /verbosity:minimal
+        env:
+          CONFIGURATION: ${{ matrix.configuration }}
 
-      - name: Upload APPX file (SSE4)
+      - name: Upload APPX (SSE4)
         if: matrix.configuration == 'Release'
         uses: actions/upload-artifact@v4
         with:
@@ -57,7 +65,7 @@ jobs:
           path: AppPackages/**/*.msixbundle
           if-no-files-found: error
 
-      - name: Upload APPX file (AVX2)
+      - name: Upload APPX (AVX2)
         if: matrix.configuration == 'Release AVX2'
         uses: actions/upload-artifact@v4
         with:
